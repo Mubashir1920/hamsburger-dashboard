@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {} from "@/components/ui/dropdown-menu"
+import { } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   Sidebar,
@@ -24,114 +24,96 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Car, ShoppingBag, UtensilsCrossed, Search, Filter, Package2 } from "lucide-react"
 import { OrderDetailsModal } from "./order-details-modal"
 
-// Mock data based on the schema
-const mockOrders = [
-  {
-    _id: "686cf13f9d4f02c738a3458c",
-    orderType: "delivery",
-    orderId: "ORD-1751970111557",
-    status: "pending",
-    formData: {
-      fullName: "Mubashir",
-      email: "iamu7564@gmail.com",
-      phone: "03071742",
-      confirmation: "pending",
-    },
-    paymentMethod: "cod",
-    billing: {
-      paymentStatus: "Unpaid",
-      totalAmount: 156.84,
-    },
-    cart: [
-      { name: "Chicken Burger", quantity: 1, price: 9.98 },
-      { name: "Double Beef Cheeseburger", quantity: 3, price: 26.97 },
-      { name: "Veggie Pizza", quantity: 1, price: 17.99 },
-    ],
-    createdAt: new Date("2025-07-08T10:21:51.831Z"),
-  },
-  {
-    _id: "686cf13f9d4f02c738a3458d",
-    orderType: "takeaway",
-    orderId: "ORD-1751970111558",
-    status: "confirmed",
-    formData: {
-      fullName: "Sarah Johnson",
-      email: "sarah@email.com",
-      phone: "03071743",
-      confirmation: "confirmed",
-      pickupTime: "2:30 PM",
-    },
-    paymentMethod: "card",
-    billing: {
-      paymentStatus: "Paid",
-      totalAmount: 45.5,
-    },
-    cart: [
-      { name: "BBQ Chicken Pizza", quantity: 1, price: 25.98 },
-      { name: "French Fries", quantity: 2, price: 5.98 },
-    ],
-    createdAt: new Date("2025-07-08T11:15:30.000Z"),
-  },
-  {
-    _id: "686cf13f9d4f02c738a3458e",
-    orderType: "dinein",
-    orderId: "ORD-1751970111559",
-    status: "preparing",
-    empId: "EMP001",
-    empName: "John Doe",
-    tableNo: "T-05",
-    billing: {
-      paymentStatus: "Unpaid",
-      totalAmount: 78.9,
-    },
-    cart: [
-      { name: "Family Feast Box", quantity: 1, price: 27.99 },
-      { name: "Chicken Wings", quantity: 2, price: 11.98 },
-    ],
-    createdAt: new Date("2025-07-08T12:00:00.000Z"),
-  },
-  {
-    _id: "686cf13f9d4f02c738a3458f",
-    orderType: "delivery",
-    orderId: "ORD-1751970111560",
-    status: "delivered",
-    formData: {
-      fullName: "Mike Wilson",
-      email: "mike@email.com",
-      phone: "03071744",
-      confirmation: "confirmed",
-      address: "123 Main St",
-    },
-    paymentMethod: "online",
-    billing: {
-      paymentStatus: "Paid",
-      totalAmount: 32.47,
-    },
-    cart: [
-      { name: "Butcher Beef", quantity: 1, price: 11.98 },
-      { name: "Snack Attack Box", quantity: 1, price: 8.49 },
-    ],
-    createdAt: new Date("2025-07-08T09:30:00.000Z"),
-  },
-]
 
-const orderTypeConfig = {
-  delivery: {
-    label: "Delivery Orders",
-    icon: Car,
-    color: "bg-blue-500",
-  },
-  takeaway: {
-    label: "Takeaway Orders",
-    icon: ShoppingBag,
-    color: "bg-green-500",
-  },
-  dinein: {
-    label: "Dine-in Orders",
-    icon: UtensilsCrossed,
-    color: "bg-purple-500",
-  },
+export type OrderType = 'delivery' | 'takeaway' | 'dinein';
+
+export type PaymentStatus = 'Paid' | 'Unpaid' | 'Pending'; // Optional if you want strict enums
+
+export interface Billing {
+  discountAmount?: number;
+  paymentStatus?: string;
+  paymentMethod?: string | null;
+  subtotal: number;
+  taxAmount: number;
+  totalAmount: number;
 }
+
+export interface TakeawayForm {
+  fullName: string;
+  email: string;
+  phone: string;
+  pickupTime: string;
+  instructions: string;
+  confirmation: string;
+}
+
+export interface DeliveryForm {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  instructions: string;
+  confirmation: string;
+}
+
+export interface SizeOption {
+  name: string;
+  price: number;
+  description: string;
+}
+
+export interface DefaultItem {
+  name: string;
+  quantity: number;
+}
+
+export interface SelectedItem {
+  type: string;
+  name: string;
+  flavour?: string;
+  option?: string;
+  quantity: number;
+  totalPrice: string;
+  sizes: SizeOption[];
+  selectedFlavours?: Map<string, string[]>;
+  defaultItems: DefaultItem[];
+  mealType?: string;
+}
+
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+  description: string;
+  category: string;
+  selectedItems: SelectedItem[];
+}
+
+export interface Order {
+  orderType: OrderType;
+  orderId: string;
+
+  empId?: string;
+  empName?: string;
+  tableNo?: string;
+  status?: string;
+
+  billing: Billing;
+
+  formData?: TakeawayForm | DeliveryForm;
+
+  paymentMethod: string;
+  cart: CartItem[];
+
+  createdAt?: Date;
+}
+
+
+
 
 export function OrderDashboard() {
   const [selectedOrderType, setSelectedOrderType] = useState<string>("all")
@@ -140,23 +122,47 @@ export function OrderDashboard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [orders, setOrders] = useState(mockOrders)
+  const [orders, setOrders] = useState<Order[]>([])
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesOrderType = selectedOrderType === "all" || order.orderType === selectedOrderType
-    const matchesPaymentStatus = paymentStatusFilter === "all" || order.billing?.paymentStatus === paymentStatusFilter
-    const matchesConfirmation =
-      confirmationFilter === "all" ||
-      order.formData?.confirmation === confirmationFilter ||
-      (confirmationFilter === "confirmed" && order.status === "confirmed")
-    const matchesSearch =
-      searchTerm === "" ||
-      order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.formData?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.empName?.toLowerCase().includes(searchTerm.toLowerCase())
 
-    return matchesOrderType && matchesPaymentStatus && matchesConfirmation && matchesSearch
-  })
+  useEffect(() => {
+
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/order/')
+        if (!response.ok) {
+          throw new Error('Failed to fetch orders')
+        }
+
+        const data = await response.json()
+        console.log(data.orders);
+        setOrders(data.orders)
+      } catch (error) {
+        console.error('Error fetching orders:', error)
+      }
+    }
+    fetchOrders()
+    // log('Orders fetched successfully:', orders)
+
+  }, [])
+
+
+
+  // const filteredOrders = orders.filter((order) => {
+  //   const matchesOrderType = selectedOrderType === "all" || order.orderType === selectedOrderType
+  //   const matchesPaymentStatus = paymentStatusFilter === "all" || order.billing?.paymentStatus === paymentStatusFilter
+  //   const matchesConfirmation =
+  //     confirmationFilter === "all" ||
+  //     order.formData?.confirmation === confirmationFilter ||
+  //     (confirmationFilter === "confirmed" && order.status === "confirmed")
+  //   const matchesSearch =
+  //     searchTerm === "" ||
+  //     order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     order.formData?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     order.empName?.toLowerCase().includes(searchTerm.toLowerCase())
+
+  //   return matchesOrderType && matchesPaymentStatus && matchesConfirmation && matchesSearch
+  // })
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -173,45 +179,45 @@ export function OrderDashboard() {
     return status === "Paid" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
   }
 
-  const updatePaymentStatus = (orderId: string, newStatus: string) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.orderId === orderId
-          ? {
-              ...order,
-              billing: { ...order.billing, paymentStatus: newStatus },
-            }
-          : order,
-      ),
-    )
-    if (selectedOrder && selectedOrder.orderId === orderId) {
-      setSelectedOrder({
-        ...selectedOrder,
-        billing: { ...selectedOrder.billing, paymentStatus: newStatus },
-      })
-    }
-  }
+  // const updatePaymentStatus = (orderId: string, newStatus: string) => {
+  //   setOrders((prevOrders) =>
+  //     prevOrders.map((order) =>
+  //       order.orderId === orderId
+  //         ? {
+  //           ...order,
+  //           billing: { ...order.billing, paymentStatus: newStatus },
+  //         }
+  //         : order,
+  //     ),
+  //   )
+  //   if (selectedOrder && selectedOrder.orderId === orderId) {
+  //     setSelectedOrder({
+  //       ...selectedOrder,
+  //       billing: { ...selectedOrder.billing, paymentStatus: newStatus },
+  //     })
+  //   }
+  // }
 
-  const updateConfirmationStatus = (orderId: string, newStatus: string) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.orderId === orderId
-          ? {
-              ...order,
-              formData: order.formData ? { ...order.formData, confirmation: newStatus } : undefined,
-              status: newStatus === "confirmed" ? "confirmed" : order.status,
-            }
-          : order,
-      ),
-    )
-    if (selectedOrder && selectedOrder.orderId === orderId) {
-      setSelectedOrder({
-        ...selectedOrder,
-        formData: selectedOrder.formData ? { ...selectedOrder.formData, confirmation: newStatus } : undefined,
-        status: newStatus === "confirmed" ? "confirmed" : selectedOrder.status,
-      })
-    }
-  }
+  // const updateConfirmationStatus = (orderId: string, newStatus: string) => {
+  //   setOrders((prevOrders) =>
+  //     prevOrders.map((order) =>
+  //       order.orderId === orderId
+  //         ? {
+  //           ...order,
+  //           formData: order.formData ? { ...order.formData, confirmation: newStatus } : undefined,
+  //           status: newStatus === "confirmed" ? "confirmed" : order.status,
+  //         }
+  //         : order,
+  //     ),
+  //   )
+  //   if (selectedOrder && selectedOrder.orderId === orderId) {
+  //     setSelectedOrder({
+  //       ...selectedOrder,
+  //       formData: selectedOrder.formData ? { ...selectedOrder.formData, confirmation: newStatus } : undefined,
+  //       status: newStatus === "confirmed" ? "confirmed" : selectedOrder.status,
+  //     })
+  //   }
+  // }
 
   const openOrderModal = (order: any) => {
     setSelectedOrder(order)
@@ -245,7 +251,7 @@ export function OrderDashboard() {
                       </Badge>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  {Object.entries(orderTypeConfig).map(([type, config]) => {
+                  {/* {Object.entries(orderTypeConfig).map(([type, config]) => {
                     const count = orders.filter((order) => order.orderType === type).length
                     const Icon = config.icon
                     return (
@@ -262,7 +268,7 @@ export function OrderDashboard() {
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     )
-                  })}
+                  })} */}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -309,12 +315,12 @@ export function OrderDashboard() {
           <main className="flex-1 space-y-4 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">
+                {/* <h1 className="text-2xl font-bold tracking-tight">
                   {selectedOrderType === "all"
                     ? "All Orders"
                     : orderTypeConfig[selectedOrderType as keyof typeof orderTypeConfig]?.label}
-                </h1>
-                <p className="text-muted-foreground">{filteredOrders.length} orders found</p>
+                </h1> */}
+                {/* <p className="text-muted-foreground">{filteredOrders.length} orders found</p> */}
               </div>
             </div>
 
@@ -338,20 +344,20 @@ export function OrderDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredOrders.map((order) => {
-                      const config = orderTypeConfig[order.orderType as keyof typeof orderTypeConfig]
-                      const Icon = config.icon
+                    {orders.map((order) => {
+                      // const config = orderTypeConfig[order.orderType as keyof typeof orderTypeConfig]
+                      // const Icon = config.icon
                       return (
                         <TableRow
-                          key={order._id}
+                          key={order.orderId}
                           className="cursor-pointer hover:bg-muted/50"
                           onClick={() => openOrderModal(order)}
                         >
                           <TableCell className="font-medium">{order.orderId}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${config.color}`} />
-                              <Icon className="h-4 w-4" />
+                              {/* <div className={`w-2 h-2 rounded-full ${config.color}`} /> */}
+                              {/* <Icon className="h-4 w-4" /> */}
                               <span className="capitalize">{order.orderType}</span>
                             </div>
                           </TableCell>
@@ -389,7 +395,7 @@ export function OrderDashboard() {
                           <TableCell>
                             <Badge className={getStatusBadge(order.status)}>{order.status}</Badge>
                           </TableCell>
-                          <TableCell>{order.createdAt.toLocaleDateString()}</TableCell>
+                          {/* <TableCell>{order.createdAt.toLocaleDateString()}</TableCell> */}
                         </TableRow>
                       )
                     })}
@@ -400,7 +406,7 @@ export function OrderDashboard() {
           </main>
         </SidebarInset>
       </div>
-      <OrderDetailsModal
+      {/* <OrderDetailsModal
         order={selectedOrder}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -408,7 +414,7 @@ export function OrderDashboard() {
         onUpdateConfirmationStatus={updateConfirmationStatus}
         getStatusBadge={getStatusBadge}
         getPaymentStatusBadge={getPaymentStatusBadge}
-      />
+      /> */}
     </SidebarProvider>
   )
 }
